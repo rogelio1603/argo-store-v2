@@ -17,6 +17,7 @@ export default function medusaError(error: any): never {
     throw new Error("No response received: " + error.request)
   } else {
     // Something happened in setting up the request that triggered an Error
-    throw new Error("Error setting up the request: " + error.message)
+    const errorMessage = error?.message || error?.toString() || "Unknown error occurred"
+    throw new Error("Error setting up the request: " + errorMessage)
   }
 }
