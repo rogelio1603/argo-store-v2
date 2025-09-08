@@ -14,49 +14,87 @@ async function getRegionMap(cacheId: string) {
   const { regionMap, regionMapUpdated } = regionMapCache
 
   if (!BACKEND_URL) {
-    throw new Error(
-      "Middleware.ts: Error fetching regions. Did you set up regions in your Medusa Admin and define a MEDUSA_BACKEND_URL environment variable? Note that the variable is no longer named NEXT_PUBLIC_MEDUSA_BACKEND_URL."
-    )
+    // Fallback to default regions for Mexico and US only
+    regionMapCache.regionMap.set("mx", {
+      id: "reg_01K4HR6SSPD90W98MAA1JF6NQX",
+      name: "Mexico",
+      currency_code: "mxn",
+      countries: [{ iso_2: "mx" }]
+    } as any)
+    regionMapCache.regionMap.set("us", {
+      id: "reg_01K4HR6SSPKHAXJQ180533WTB8", 
+      name: "United States",
+      currency_code: "usd",
+      countries: [{ iso_2: "us" }]
+    } as any)
+    return regionMapCache.regionMap
   }
 
   if (
     !regionMap.keys().next().value ||
     regionMapUpdated < Date.now() - 3600 * 1000
   ) {
-    // Fetch regions from Medusa. We can't use the JS client here because middleware is running on Edge and the client needs a Node environment.
-    const { regions } = await fetch(`${BACKEND_URL}/store/regions`, {
-      headers: {
-        "x-publishable-api-key": PUBLISHABLE_API_KEY!,
-      },
-      next: {
-        revalidate: 3600,
-        tags: [`regions-${cacheId}`],
-      },
-      cache: "force-cache",
-    }).then(async (response) => {
-      const json = await response.json()
+    try {
+      // Make a simpler fetch for Vercel Edge Runtime
+      const response = await fetch(`${BACKEND_URL}/store/regions`, {
+        headers: {
+          "x-publishable-api-key": PUBLISHABLE_API_KEY!,
+          "Content-Type": "application/json",
+        },
+        method: "GET",
+      })
 
       if (!response.ok) {
-        throw new Error(json.message)
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
       }
 
-      return json
-    })
+      const text = await response.text()
+      let json
+      
+      try {
+        json = JSON.parse(text)
+      } catch (parseError) {
+        console.error("JSON Parse Error:", parseError)
+        console.error("Response text:", text.substring(0, 200))
+        throw new Error("Invalid JSON response from backend")
+      }
 
-    if (!regions?.length) {
-      throw new Error(
-        "No regions found. Please set up regions in your Medusa Admin."
-      )
-    }
+      const { regions } = json
 
-    // Create a map of country codes to regions.
-    regions.forEach((region: HttpTypes.StoreRegion) => {
-      region.countries?.forEach((c) => {
-        regionMapCache.regionMap.set(c.iso_2 ?? "", region)
+      if (!regions?.length) {
+        throw new Error("No regions found. Please set up regions in your Medusa Admin.")
+      }
+
+      // Clear existing and populate with live data
+      regionMapCache.regionMap.clear()
+      
+      // Filter to only Mexico and US regions for your use case
+      regions.forEach((region: HttpTypes.StoreRegion) => {
+        region.countries?.forEach((c) => {
+          if (c.iso_2 === "mx" || c.iso_2 === "us") {
+            regionMapCache.regionMap.set(c.iso_2 ?? "", region)
+          }
+        })
       })
-    })
 
-    regionMapCache.regionMapUpdated = Date.now()
+      regionMapCache.regionMapUpdated = Date.now()
+    } catch (error) {
+      console.error("Failed to fetch regions, using fallback:", error)
+      // Fallback to hardcoded regions
+      regionMapCache.regionMap.clear()
+      regionMapCache.regionMap.set("mx", {
+        id: "reg_01K4HR6SSPD90W98MAA1JF6NQX",
+        name: "Mexico", 
+        currency_code: "mxn",
+        countries: [{ iso_2: "mx" }]
+      } as any)
+      regionMapCache.regionMap.set("us", {
+        id: "reg_01K4HR6SSPKHAXJQ180533WTB8",
+        name: "United States",
+        currency_code: "usd", 
+        countries: [{ iso_2: "us" }]
+      } as any)
+    }
   }
 
   return regionMapCache.regionMap
