@@ -1,36 +1,35 @@
-import { Github } from "@medusajs/icons"
 import { Button, Heading } from "@medusajs/ui"
+import { getCarouselSlides } from "@lib/data/strapi"
+import LocalizedClientLink from "@modules/common/components/localized-client-link"
+import HeroCarousel from "./hero-carousel"
 
-const Hero = () => {
-  return (
-    <div className="h-[75vh] w-full border-b border-ui-border-base relative bg-ui-bg-subtle">
-      <div className="absolute inset-0 z-10 flex flex-col justify-center items-center text-center small:p-32 gap-6">
-        <span>
-          <Heading
-            level="h1"
-            className="text-3xl leading-10 text-ui-fg-base font-normal"
-          >
-            Ecommerce Starter Template
-          </Heading>
-          <Heading
-            level="h2"
-            className="text-3xl leading-10 text-ui-fg-subtle font-normal"
-          >
-            Powered by Medusa and Next.js
-          </Heading>
-        </span>
-        <a
-          href="https://github.com/medusajs/nextjs-starter-medusa"
-          target="_blank"
-        >
-          <Button variant="secondary">
-            View on GitHub
-            <Github />
-          </Button>
-        </a>
+const Hero = async () => {
+  const slides = await getCarouselSlides()
+
+  // If no slides from Strapi, show fallback
+  if (!slides || slides.length === 0) {
+    return (
+      <div className="h-[60vh] w-full border-b border-ui-border-base relative bg-ui-bg-subtle">
+        <div className="absolute inset-0 z-10 flex flex-col justify-center items-center text-center gap-6">
+          <span>
+            <Heading level="h1" className="text-3xl leading-10 text-ui-fg-base font-normal">
+              Moda que Define tu Estilo
+            </Heading>
+            <Heading level="h2" className="text-3xl leading-10 text-ui-fg-subtle font-normal">
+              Descubre nuestra colección exclusiva
+            </Heading>
+          </span>
+          <LocalizedClientLink href="/store">
+            <Button variant="secondary">
+              Explorar Colección
+            </Button>
+          </LocalizedClientLink>
+        </div>
       </div>
-    </div>
-  )
+    )
+  }
+
+  return <HeroCarousel slides={slides} />
 }
 
 export default Hero
