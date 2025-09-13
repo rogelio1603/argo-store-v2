@@ -36,6 +36,21 @@ const nextConfig = {
         protocol: "https",
         hostname: "medusa-server-testing.s3.us-east-1.amazonaws.com",
       },
+      // Strapi domains
+      {
+        protocol: "http",
+        hostname: "localhost",
+        port: "1337",
+      },
+      {
+        protocol: "https",
+        hostname: "argoshop-strapi-reluss-199545-31-97-146-102.traefik.me",
+      },
+      // Generic pattern for Strapi subdomains
+      {
+        protocol: "https",
+        hostname: "*.traefik.me",
+      },
     ],
   },
 }

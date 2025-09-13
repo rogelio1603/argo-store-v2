@@ -63,6 +63,21 @@
   animation: slideRightAndFade 400ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+/* Embla Carousel Styles */
+.embla {
+  overflow: hidden;
+}
+
+.embla__container {
+  display: flex;
+  height: 100%;
+}
+
+.embla__slide {
+  position: relative;
+  min-width: 0;
+}
+
 @layer utilities {
   /* Chrome, Safari and Opera */
   .no-scrollbar::-webkit-scrollbar {
