@@ -1,0 +1,39 @@
+# Node
+node_modules
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+.pnpm-debug.log
+
+# Next.js
+.next/cache
+out
+
+# Docker
+Dockerfile
+.dockerignore
+
+# Logs
+logs
+*.log
+*.log.*
+
+# Sistema/IDE
+.DS_Store
+*.swp
+.vscode
+.idea
+*.iml
+
+# Git
+.git
+.gitignore
+
+# Tests
+coverage
+__tests__
+__mocks__
+
+# Env files (usa Dokploy Env Vars en lugar de subirlos)
+.env
+.env*.local
