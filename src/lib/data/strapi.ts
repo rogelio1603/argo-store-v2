@@ -32,6 +32,39 @@ interface StrapiCarouselResponse {
   }
 }
 
+// Sobre Argo (testimonials) types
+interface StrapiMediaUrl {
+  url: string
+}
+
+interface StrapiSobreArgo {
+  id: number
+  documentId: string
+  argo_imagen: StrapiMediaUrl | null
+  historia_argo: string
+  testimonios: StrapiMediaUrl[]
+  telefono_contacto: string | number | null
+  whatsapp_contacto: string | number | null
+  direccion_tienda: string
+  horarios_tienda: string
+  correo_electronico: string
+  publishedAt: string
+  createdAt: string
+  updatedAt: string
+}
+
+interface StrapiSobreArgoResponse {
+  data: StrapiSobreArgo[]
+  meta: {
+    pagination: {
+      page: number
+      pageSize: number
+      pageCount: number
+      total: number
+    }
+  }
+}
+
 export interface CarouselSlide {
   id: number
   primer_texto: string
@@ -44,6 +77,21 @@ export interface CarouselSlide {
     width: number
     height: number
   }[]
+}
+
+export interface SobreArgoItem {
+  id: number
+  argo_imagen: string | null
+  historia_argo: string
+  testimonios: string[]
+  telefono_contacto: string
+  whatsapp_contacto: string
+  direccion_tienda: string
+  horarios_tienda: string
+  correo_electronico: string
+  facebook_url?: string
+  instagram_url?: string
+  youtube_url?: string
 }
 
 const STRAPI_HOST = process.env.NEXT_PUBLIC_STRAPI_HOST
@@ -102,6 +150,55 @@ export const getCarouselSlides = async (): Promise<CarouselSlide[]> => {
     return slides
 
   } catch (error) {
+    return []
+  }
+}
+
+// Returns store information from `sobre-argos`
+export const getStoreInfo = async (): Promise<SobreArgoItem[]> => {
+  try {
+    const url = `${STRAPI_HOST}/api/sobre-argos?populate[argo_imagen][fields][0]=url&populate[testimonios][fields][0]=url`
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${STRAPI_TOKEN}`,
+        'Content-Type': 'application/json',
+      },
+      next: {
+        revalidate: 300,
+        tags: ['store-info']
+      },
+      cache: 'force-cache'
+    })
+
+    if (!response.ok) {
+      return []
+    }
+
+    const data: StrapiSobreArgoResponse = await response.json()
+
+    if (!data.data || !Array.isArray(data.data)) {
+      return []
+    }
+
+    const items: SobreArgoItem[] = data.data.map((item) => ({
+      id: item.id,
+      argo_imagen: item.argo_imagen ? `${STRAPI_HOST}${item.argo_imagen.url}` : null,
+      historia_argo: item.historia_argo || '',
+      testimonios: item.testimonios?.map((image) => `${STRAPI_HOST}${image.url}`) || [],
+      telefono_contacto: String(item.telefono_contacto ?? ''),
+      whatsapp_contacto: String(item.whatsapp_contacto ?? ''),
+      direccion_tienda: item.direccion_tienda || '',
+      horarios_tienda: item.horarios_tienda || '',
+      correo_electronico: item.correo_electronico || '',
+      facebook_url: (item as any).facebook_url || undefined,
+      instagram_url: (item as any).instagram_url || undefined,
+      youtube_url: (item as any).youtube_url || undefined
+    }))
+
+    return items
+  } catch (_error) {
     return []
   }
 }

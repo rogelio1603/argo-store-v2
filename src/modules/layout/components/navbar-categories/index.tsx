@@ -167,7 +167,7 @@ export default async function NavbarCategories() {
 
       {/* Sobre Nosotros - Hardcoded */}
       <LocalizedClientLink
-        href="/about"
+        href="/sobre-nosotros"
         className="txt-compact-plus hover:text-ui-fg-base transition-colors duration-200"
       >
         Sobre Nosotros
