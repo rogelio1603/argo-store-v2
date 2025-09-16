@@ -4,9 +4,27 @@ import * as React from "react"
 import { motion } from "motion/react"
 import { MapPinIcon, ClockIcon, PhoneIcon, MailIcon, UsersIcon } from "lucide-react"
 
-export function LocationSection() {
+interface LocationSectionProps {
+  address?: string
+  hours?: string
+  phone?: string
+  email?: string
+}
+
+export function LocationSection({ address, hours, phone, email }: LocationSectionProps) {
   const [mapLoaded, setMapLoaded] = React.useState(false)
   const [mapError, setMapError] = React.useState(false)
+
+  const digits = (phone ?? "").replace(/\D/g, "")
+  const displayPhone = (() => {
+    if (digits.length === 10) {
+      return `+52 ${digits.slice(0, 2)} ${digits.slice(2, 6)} ${digits.slice(6, 10)}`
+    }
+    if (digits) return `+52 ${digits}`
+    return "+52 33 3074 3550"
+  })()
+  const telHref = digits ? `tel:+52${digits}` : "tel:+523330743550"
+  const emailHref = email ? `mailto:${email}` : "mailto:argo.store@gmail.com"
 
   return (
     <section className="py-16 lg:py-24 bg-gray-50">
@@ -140,9 +158,15 @@ export function LocationSection() {
                 Dirección
               </h4>
               <div className="text-gray-600 space-y-0.5 leading-snug">
-                <p>Motolinia 156-C, zona del vestir Medrano</p>
-                <p>Guadalajara, Jalisco, 44800</p>
-                <p>México</p>
+                {address ? (
+                  <p>{address}</p>
+                ) : (
+                  <>
+                    <p>Motolinia 156-C, zona del vestir Medrano</p>
+                    <p>Guadalajara, Jalisco, 44800</p>
+                    <p>México</p>
+                  </>
+                )}
               </div>
             </motion.div>
 
@@ -159,14 +183,20 @@ export function LocationSection() {
                 Horarios
               </h4>
               <div className="text-gray-600 space-y-1.5 leading-snug">
-                <div className="flex justify-between">
-                  <span>Lunes - Sábado:</span>
-                  <span className="font-medium">10:00 AM - 7:00 PM</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Domingos:</span>
-                  <span className="font-medium">10:00 AM - 6:00 PM</span>
-                </div>
+                {hours ? (
+                  <p className="font-medium whitespace-pre-line">{hours}</p>
+                ) : (
+                  <>
+                    <div className="flex gap-2">
+                      <span>Lunes - Sábado:</span>
+                      <span className="font-medium">10:00 AM - 7:00 PM</span>
+                    </div>
+                    <div className="flex gap-2">
+                      <span>Domingos:</span>
+                      <span className="font-medium">10:00 AM - 6:00 PM</span>
+                    </div>
+                  </>
+                )}
               </div>
             </motion.div>
 
@@ -187,10 +217,10 @@ export function LocationSection() {
                   <div>
                     <p className="font-medium leading-tight">Teléfono:</p>
                     <a 
-                      href="tel:+523330243550" 
+                      href={telHref} 
                       className="text-red-500 hover:text-red-600 transition-colors leading-tight"
                     >
-                      +52 33 3074 3550
+                      {displayPhone}
                     </a>
                   </div>
                 </div>
@@ -200,10 +230,10 @@ export function LocationSection() {
                   <div>
                     <p className="font-medium leading-tight">Email:</p>
                     <a 
-                      href="mailto:argo.store@gmail.com" 
+                      href={emailHref} 
                       className="text-red-500 hover:text-red-600 transition-colors leading-tight"
                     >
-                      argo.store@gmail.com
+                      {email ?? "argo.store@gmail.com"}
                     </a>
                   </div>
                 </div>
@@ -228,7 +258,7 @@ export function LocationSection() {
                 Cómo Llegar
               </a>
               <a
-                href="tel:+523330243550"
+                href={telHref}
                 className="flex-1 inline-flex items-center justify-center px-6 py-3 bg-gray-900 hover:bg-gray-800 text-white font-semibold rounded-xl transition-colors duration-300 shadow-lg hover:shadow-xl"
               >
                 <PhoneIcon className="w-5 h-5 mr-2" />

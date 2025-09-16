@@ -1,21 +1,68 @@
 "use client"
 
 import * as React from "react"
-import Image from "next/image"
 import { motion } from "motion/react"
-import { useQuery } from "@tanstack/react-query"
+import { Images } from "lucide-react"
 
-export function TestimonialsSection() {
-  const {
-    data: testimonialsData,
-    isLoading,
-    error
-  } = useQuery({
-    queryKey: ['testimonials'],
-    staleTime: 5 * 60 * 1000, // 5 minutes
-  })
+interface TestimonialImage {
+  id: string
+  url: string
+  alt: string
+}
 
-  const testimonials = testimonialsData?.data || []
+interface TestimonialsSectionProps {
+  images: TestimonialImage[]
+}
+
+export function TestimonialsSection({ images }: TestimonialsSectionProps) {
+  const isLoading = false
+  const error = null
+
+  const testimonials = images || []
+  const containerRef = React.useRef<HTMLDivElement | null>(null)
+  const trackRef = React.useRef<HTMLDivElement | null>(null)
+  const [distance, setDistance] = React.useState(0)
+  const [isModalOpen, setIsModalOpen] = React.useState(false)
+  const [selectedImage, setSelectedImage] = React.useState<TestimonialImage | null>(null)
+  const [isViewerOpen, setIsViewerOpen] = React.useState(false)
+
+  React.useEffect(() => {
+    const container = containerRef.current
+    const track = trackRef.current
+    if (!container || !track) return
+
+    // Move by half the track since we duplicate content once
+    const totalWidth = track.scrollWidth
+    const halfWidth = totalWidth / 2
+    setDistance(halfWidth)
+  }, [testimonials])
+
+  React.useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (isViewerOpen) setIsViewerOpen(false)
+        else setIsModalOpen(false)
+      }
+    }
+    if (isModalOpen || isViewerOpen) {
+      window.addEventListener('keydown', onKey)
+    }
+    return () => window.removeEventListener('keydown', onKey)
+  }, [isModalOpen, isViewerOpen])
+
+  // Lock background scroll while any modal is open
+  React.useEffect(() => {
+    const modalOpen = isModalOpen || isViewerOpen
+    const original = document.body.style.overflow
+    if (modalOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = original || ''
+    }
+    return () => {
+      document.body.style.overflow = original || ''
+    }
+  }, [isModalOpen, isViewerOpen])
 
   if (error) {
     return (
@@ -27,8 +74,8 @@ export function TestimonialsSection() {
     )
   }
 
-  // Duplicate testimonials for infinite scroll effect
-  const duplicatedTestimonials = testimonials.length > 0 ? [...testimonials, ...testimonials, ...testimonials] : []
+  // Duplicate testimonials once to create a seamless loop
+  const loopedTestimonials = testimonials.length > 0 ? [...testimonials, ...testimonials] : []
 
   return (
     <section className="py-16 lg:py-24 bg-gray-50 overflow-hidden">
@@ -84,25 +131,27 @@ export function TestimonialsSection() {
             <div className="absolute right-0 top-0 w-32 h-full bg-gradient-to-l from-gray-50 to-transparent z-10 pointer-events-none" />
             
             {/* Carousel container */}
-            <div className="flex overflow-hidden">
-              <div className="flex animate-scroll-left space-x-6">
-                {duplicatedTestimonials.map((testimonial, index) => (
-                  <div
-                    key={`${testimonial.id}-${index}`}
-                    className="flex-shrink-0"
-                  >
+            <div ref={containerRef} className="flex overflow-hidden">
+              <motion.div
+                ref={trackRef}
+                className="flex space-x-6"
+                animate={distance > 0 ? { x: [0, -distance] } : undefined}
+                transition={distance > 0 ? { duration: Math.max(12, distance / 80), ease: "linear", repeat: Infinity } : undefined}
+              >
+                {loopedTestimonials.map((testimonial, index) => (
+                  <div key={`${testimonial.id}-${index}`} className="flex-shrink-0">
                     <div className="relative w-64 h-80 rounded-xl overflow-hidden bg-gray-100 shadow-lg">
-                      <Image
-                        src={testimonial.image}
+                      <img
+                        src={testimonial.url}
                         alt={testimonial.alt}
-                        fill
-                        className="object-cover"
-                        sizes="256px"
+                        className="object-cover w-full h-full"
+                        loading="lazy"
+                        decoding="async"
                       />
                     </div>
                   </div>
                 ))}
-              </div>
+              </motion.div>
             </div>
           </motion.div>
         )}
@@ -122,6 +171,16 @@ export function TestimonialsSection() {
           transition={{ duration: 0.6, ease: "easeOut", delay: 0.3 }}
           viewport={{ once: true, margin: "-100px" }}
         >
+          <div className="flex justify-center mb-6">
+            <button
+              type="button"
+              onClick={() => { setIsModalOpen(true) }}
+              className="inline-flex items-center gap-2 px-6 py-3 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors duration-300"
+            >
+              <Images className="w-5 h-5" aria-hidden="true" />
+              Ver todos las imagenes
+            </button>
+          </div>
           <motion.p 
             className="text-gray-600 mb-6"
             initial={{ opacity: 0 }}
@@ -168,6 +227,96 @@ export function TestimonialsSection() {
           </motion.div>
         </motion.div>
       </div>
+
+      {/* Modal - Gallery Grid */}
+      {isModalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm overscroll-contain"
+          onClick={() => setIsModalOpen(false)}
+          role="dialog"
+          aria-modal="true"
+        >
+          <div
+            className="relative w-[95vw] max-w-6xl h-[85vh] bg-white rounded-xl shadow-2xl overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b">
+              <h3 className="text-lg font-semibold text-gray-900">Galería de testimonios</h3>
+              <button
+                className="p-2 rounded-md hover:bg-gray-100"
+                onClick={() => setIsModalOpen(false)}
+                aria-label="Cerrar"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+                  <path fillRule="evenodd" d="M5.47 5.47a.75.75 0 011.06 0L12 10.94l5.47-5.47a.75.75 0 111.06 1.06L13.06 12l5.47 5.47a.75.75 0 11-1.06 1.06L12 13.06l-5.47 5.47a.75.75 0 01-1.06-1.06L10.94 12 5.47 6.53a.75.75 0 010-1.06z" clipRule="evenodd" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Grid */}
+            <div className="p-4 sm:p-6 overflow-auto overscroll-contain h-[calc(85vh-4rem)]">
+              <motion.div
+                className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4"
+                initial="hidden"
+                animate="show"
+                variants={{ hidden: { opacity: 1 }, show: { opacity: 1, transition: { staggerChildren: 0.05 } } }}
+              >
+                {testimonials.map((img) => (
+                  <motion.button
+                    key={img.id}
+                    type="button"
+                    className="group relative aspect-square rounded-lg overflow-hidden border border-gray-200 hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-red-500"
+                    onClick={() => { setSelectedImage(img); setIsViewerOpen(true) }}
+                    variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } }}
+                  >
+                    <img
+                      src={img.url}
+                      alt={img.alt}
+                      className="object-cover w-full h-full group-hover:opacity-90"
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  </motion.button>
+                ))}
+              </motion.div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Viewer Modal (on top of grid modal) */}
+      {isViewerOpen && selectedImage && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 cursor-zoom-out p-4"
+          onClick={() => setIsViewerOpen(false)}
+          role="dialog"
+          aria-modal="true"
+        >
+          <div
+            className="relative cursor-zoom-out"
+            onClick={() => setIsViewerOpen(false)}
+          >
+            {/* Close button, tucked just inside the image bounds */}
+            <button
+              className="absolute -top-3 -right-3 sm:top-2 sm:right-2 z-10 p-2 rounded-full bg-black/70 text-white hover:bg-black/80 shadow"
+              onClick={(e) => { e.stopPropagation(); setIsViewerOpen(false) }}
+              aria-label="Cerrar"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+                <path fillRule="evenodd" d="M5.47 5.47a.75.75 0 011.06 0L12 10.94l5.47-5.47a.75.75 0 111.06 1.06L13.06 12l5.47 5.47a.75.75 0 11-1.06 1.06L12 13.06l-5.47 5.47a.75.75 0 01-1.06-1.06L10.94 12 5.47 6.53a.75.75 0 010-1.06z" clipRule="evenodd" />
+              </svg>
+            </button>
+            {/* Image sized to content but constrained by viewport */}
+            <img
+              src={selectedImage.url}
+              alt={selectedImage.alt}
+              className="max-w-[92vw] max-h-[82vh] w-auto h-auto object-contain rounded-lg shadow-2xl cursor-default"
+              onClick={(e) => e.stopPropagation()}
+            />
+          </div>
+        </div>
+      )}
     </section>
   )
 } 
