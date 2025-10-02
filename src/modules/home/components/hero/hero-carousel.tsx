@@ -103,7 +103,7 @@ const HeroCarousel = ({ slides }: HeroCarouselProps) => {
               variant="secondary" 
               className="bg-red-500 hover:bg-red-600 text-white border-red-500 hover:border-red-600 px-8 py-3 text-lg"
             >
-              Explorar Colección
+              Ver todos los productos
             </Button>
           </LocalizedClientLink>
         </div>
