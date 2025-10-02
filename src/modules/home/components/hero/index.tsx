@@ -21,7 +21,7 @@ const Hero = async () => {
           </span>
           <LocalizedClientLink href="/store">
             <Button variant="secondary">
-              Explorar Colección
+              Ver todos los productos
             </Button>
           </LocalizedClientLink>
         </div>

@@ -92,6 +92,7 @@ export interface SobreArgoItem {
   facebook_url?: string
   instagram_url?: string
   youtube_url?: string
+  tiktok_url?: string
 }
 
 const STRAPI_HOST = process.env.NEXT_PUBLIC_STRAPI_HOST
@@ -194,7 +195,8 @@ export const getStoreInfo = async (): Promise<SobreArgoItem[]> => {
       correo_electronico: item.correo_electronico || '',
       facebook_url: (item as any).facebook_url || undefined,
       instagram_url: (item as any).instagram_url || undefined,
-      youtube_url: (item as any).youtube_url || undefined
+      youtube_url: (item as any).youtube_url || undefined,
+      tiktok_url: (item as any).tiktok_url || undefined
     }))
 
     return items

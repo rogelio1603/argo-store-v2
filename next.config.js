@@ -39,9 +39,35 @@ const nextConfig = {
       },
 
       {
+        protocol: "http",
+        hostname: "localhost",
+        port: "9000",
+        pathname: "/static/**",
+      },
+
+      {
         protocol: "https",
         hostname: "argoshop-strapi-reluss-199545-31-97-146-102.traefik.me",
         pathname: "/uploads/**",
+      },
+
+      // Dominios de producción
+      {
+        protocol: "https",
+        hostname: "api.rogeliooseguera.xyz",
+        pathname: "/**",
+      },
+
+      {
+        protocol: "https",
+        hostname: "cms.rogeliooseguera.xyz",
+        pathname: "/uploads/**",
+      },
+
+      {
+        protocol: "https",
+        hostname: "app.rogeliooseguera.xyz",
+        pathname: "/**",
       },
     ],
   },

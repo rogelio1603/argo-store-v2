@@ -125,7 +125,7 @@ export default async function AboutUsPage() {
         email={info?.correo_electronico}
         facebookUrl={info?.facebook_url}
         instagramUrl={info?.instagram_url}
-        youtubeUrl={info?.youtube_url}
+        tiktokUrl={(info as any)?.tiktok_url}
       />
       
       {/* Location Section */}
